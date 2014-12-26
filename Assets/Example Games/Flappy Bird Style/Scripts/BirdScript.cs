@@ -3,18 +3,28 @@ using System.Collections;
 
 public class BirdScript : MonoBehaviour 
 {
+	public static BirdScript current;	//a reference to our bird so we can access it statically
 	public float upForce;			//upward force of the "flap"
 	public float forwardSpeed;		//forward movement speed
 	public bool isDead = false;		//has the player collided with a wall?
 
-	Animator anim;					//reference to the animator component
-	bool flap = false;				//has the player triggered a "flap"?
+	public Sprite[] sprites;
+	public AudioClip[] clips;
+	public AudioClip flipAudio;
 
+	bool flap = false;				//has the player triggered a "flap"?
 
 	void Start()
 	{
-		//get reference to the animator component
-		anim = GetComponent<Animator> ();
+		//if we don't currently have a game control...
+		if (current == null)
+			//...set this one to be it...
+			current = this;
+		//...otherwise...
+		else if(current != this)
+			//...destroy this one because it is a duplicate
+			Destroy (gameObject);
+
 		//set the bird moving forward
 		rigidbody2D.velocity = new Vector2 (forwardSpeed, 0);
 	}
@@ -25,8 +35,12 @@ public class BirdScript : MonoBehaviour
 		if (isDead)
 			return;
 		//look for input to trigger a "flap"
-		if (Input.anyKeyDown)
+		if (Input.anyKeyDown) {
 			flap = true;
+			int index = Random.Range(0, sprites.Length);
+			SpriteRenderer sr = GetComponentInChildren<SpriteRenderer> ();
+			sr.sprite = sprites[index];
+		}
 	}
 
 	void FixedUpdate()
@@ -36,12 +50,12 @@ public class BirdScript : MonoBehaviour
 		{
 			flap = false;
 
-			//...tell the animator about it and then...
-			anim.SetTrigger("Flap");
 			//...zero out the birds current y velocity before...
 			rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x, 0);
 			//..giving the bird some upward force
 			rigidbody2D.AddForce(new Vector2(0, upForce));
+
+			CameraFollow.current.FlipSound ();
 		}
 	}
 
@@ -49,9 +63,16 @@ public class BirdScript : MonoBehaviour
 	{
 		//if the bird collides with something set it to dead...
 		isDead = true;
-		//...tell the animator about it...
-		anim.SetTrigger ("Die");
 		//...and tell the game control about it
 		GameControlScript.current.BirdDied ();
+
+		audio.Stop ();
+	}
+
+	public void SoundPass ()
+	{
+		int index = Random.Range (0, clips.Length);
+		audio.clip = clips [index];
+		audio.Play ();
 	}
 }

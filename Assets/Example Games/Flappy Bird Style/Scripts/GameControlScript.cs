@@ -7,6 +7,7 @@ public class GameControlScript : MonoBehaviour
 	public ColumnSpawnScript columnSpawner;		//a reference to the column spawner
 	public GUIText scoreText;					//a reference to text that shows the player's score
 	public GameObject gameOvertext;				//a reference to the object that contains the text that appears when the player dies
+	public GameObject MainCamera;
 
 	int score = 0;								//the player's score
 	bool isGameOver = false;					//is the game over?
@@ -43,6 +44,8 @@ public class GameControlScript : MonoBehaviour
 		score++;
 		//adjust the score text
 		scoreText.text = "Score: " + score;
+
+		BirdScript.current.SoundPass ();
 	}
 
 	public void BirdDied()
@@ -53,5 +56,9 @@ public class GameControlScript : MonoBehaviour
 		gameOvertext.SetActive (true);
 		//set the game to be over
 		isGameOver = true;
+
+		AudioSource audioSource = MainCamera.GetComponentInChildren<AudioSource> ();
+		audioSource.Stop ();
+		CameraFollow.current.GameOverSound ();
 	}
 }
